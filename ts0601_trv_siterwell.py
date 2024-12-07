@@ -49,7 +49,7 @@ SITERWELL_BATTERY_ATTR = 0x0215  # [0,0,0,98] battery charge
 # [0] away [1] scheduled [2] manual [3] installation
 SITERWELL_MODE_ATTR = 0x0404
 SITERWELL_WINDOW_ALARM_ATTR = 0x0411  # [0] off [1] on
-SITERWELL_VALVE_JAMMED_ALARM_ATTR = 0x0413  # [0] off [1] pn
+SITERWELL_VALVE_JAMMED_ALARM_ATTR = 0x0413  # [0] off [1] on
 # minimum limit of temperature setting
 SITERWELL_MIN_TEMPERATURE_VAL = 5  # degrees
 # maximum limit of temperature setting
@@ -78,7 +78,7 @@ class SiterwellManufCluster(TuyaManufClusterAttributes):
             SITERWELL_BATTERY_ATTR: ("battery", t.uint32_t, True),
             SITERWELL_MODE_ATTR: ("mode", t.uint8_t, True),
             SITERWELL_WINDOW_ALARM_ATTR: ("window_alarm", t.uint8_t, True),
-            SITERWELL_VALVE_JAMMED_ALARM_ATTR: ("valve_alarm", t.uint8_t, True),
+            SITERWELL_VALVE_JAMMED_ALARM_ATTR: ("valve_state", t.uint8_t, True),
         }
     )
 
@@ -224,8 +224,8 @@ class SiterwellThermostat(TuyaThermostatCluster):
                     self.attributes_by_name["system_mode"].id, self.SystemMode.Heat
                 )
                 oper_mode = value
-            # if system_mode == self.SystemMode.Off:
-            #     return {SITERWELL_MODE_ATTR: 0}
+            if system_mode == self.SystemMode.Off:
+                return {SITERWELL_MODE_ATTR: 0}
             if system_mode == self.SystemMode.Heat:
                 if oper_mode == self.ProgrammingOperationMode.Schedule_programming_mode:
                     return {SITERWELL_MODE_ATTR: 1}
@@ -256,8 +256,8 @@ class SiterwellThermostat(TuyaThermostatCluster):
         if value == 0:
             operation_preset = self.Preset.Away
             prog_mode = self.ProgrammingOperationMode.Simple
-            occupancy = self.Occupancy.Occupied
-            system_mode = self.SystemMode.Heat
+            occupancy = self.Occupancy.Unoccupied
+            system_mode = self.SystemMode.Off
             target_temp = self._attr_cache.get(
                 self.attributes_by_name["occupied_heating_setpoint"].id
             )
